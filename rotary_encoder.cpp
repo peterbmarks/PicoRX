@@ -12,9 +12,9 @@ rotary_encoder::rotary_encoder(s_global_settings &settings) : encoder(settings) 
   quadrature_encoder_program_init(pio, sm, offset, PIN_AB, 1000);
 
   if (settings.encoder_resolution) {
-    new_position = -((quadrature_encoder_get_count(pio, sm) + 1) / 2);
+    new_position = ((quadrature_encoder_get_count(pio, sm) + 1) / 2);
   } else {
-    new_position = -((quadrature_encoder_get_count(pio, sm) + 2) / 4);
+    new_position = ((quadrature_encoder_get_count(pio, sm) + 2) / 4);
   }
 
   old_position = new_position;
@@ -22,9 +22,9 @@ rotary_encoder::rotary_encoder(s_global_settings &settings) : encoder(settings) 
 
 int32_t rotary_encoder::get_change(void) {
   if (settings.encoder_resolution) {
-    new_position = -((quadrature_encoder_get_count(pio, sm) + 1) / 2);
+    new_position = ((quadrature_encoder_get_count(pio, sm) + 1) / 2);
   } else {
-    new_position = -((quadrature_encoder_get_count(pio, sm) + 2) / 4);
+    new_position = ((quadrature_encoder_get_count(pio, sm) + 2) / 4);
   }
   int32_t delta = new_position - old_position;
   old_position = new_position;
