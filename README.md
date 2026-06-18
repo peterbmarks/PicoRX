@@ -1,121 +1,108 @@
-Pi Pico Rx - A crystal radio for the digital age?
-=================================
+# Pi Pico Rx
 
-
-My first step into the world of electronics was with a crystal radio, just like this one. 
-
-![crystal radio](images/crystal_radio.jpg)
-
-Back then, I don't think it has ever occurred to me that I could make a radio myself, so I wasn't expecting it to work. But when I put the earphone in, I was amazed to hear very faint sounds coming through. I couldn't believe that building a radio could be so simple, and the best part was, it didn't need any batteries! That little experience sparked my interest in electronics.
-
-Times have certainly changed since then, and today, we find ourselves in a golden age for electronics enthusiasts. Back in the ninteen eightees, I could have never imagined that my pocket money would one day buy a device with computing power that could have filled an entire room just a few decades ago.
-
-I often wonder how we can still capture that sense of awe and excitement from my first crystal radio experience. Is it still possible to create something simple yet captivating? 
-
-The Pi Pico Rx - may be the answer to that question. While it may not be quite as straightforward as the crystal radio, the Pi Pico Rx presents a remarkably simple solution. Armed with just a [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/), an analogue switch, and an op-amp, we now have the power to construct a capable SDR receiver covering the LW, MW, and SW bands. With the ability to receive signals from halfway around the globe. I can't help but think that my younger self would have been truly impressed!
+A software-defined radio (SDR) receiver built around a [Raspberry Pi Pico](https://www.raspberrypi.com/products/raspberry-pi-pico/). With little more than a Pico, an analogue switch, and an op-amp, it forms a capable receiver covering the LW, MW, and SW bands — able to pull in signals from the other side of the world.
 
 ![concept](images/concept.svg)
 
-Features
---------
+## Features
 
-+ 0 - 30MHz coverage
-+ 250kHz bandwidth SDR reciever
-+ CW/SSB/AM/FM reception
-+ OLED display
-+ simple spectrum scope
-+ Headphones/Speaker
-+ 500 general purpose memories
-+ runs on 3 AAA batteries
-+ less than 50mA current consumption
+- 0 – 30 MHz coverage
+- 250 kHz bandwidth quadrature SDR receiver
+- CW / SSB / AM / FM reception
+- OLED (and optional ILI934x colour) display
+- Simple spectrum scope and waterfall
+- Headphone / speaker output (PWM audio) and USB audio streaming
+- CAT control over USB serial
+- 500 general-purpose memory channels
+- Runs on 3 AAA batteries at less than 50 mA
 
-Development
------------
+For the full background, hardware design, and theory of operation, see the write-up at [Read the Docs](https://101-things.readthedocs.io/en/latest/radio_receiver.html) and the [user manual](user_manual/).
 
-![concept](images/top.svg)
+## How it works (software overview)
 
-Pi Pico Rx is currently at the experimental prototyping stage, but it does work. [Read the Docs](https://101-things.readthedocs.io/en/latest/radio_receiver.html) for more technical details!
+The firmware runs across both cores of the RP2040 / RP2350:
 
-Getting the Code
-----------------
+- **Signal capture & DSP** — A quadrature sampling detector feeds the ADC. The DSP chain ([`rx.cpp`](rx.cpp), [`rx_dsp.cpp`](rx_dsp.cpp), [`nco.cpp`](nco.cpp), [`fft_filter.cpp`](fft_filter.cpp), [`noise_reduction.cpp`](noise_reduction.cpp)) handles down-conversion, filtering, AGC, demodulation, and noise reduction.
+- **Audio output** — Demodulated audio is sent to a PWM audio sink ([`pwm_audio_sink.cpp`](pwm_audio_sink.cpp)) and/or streamed over USB ([`usb_audio_device.c`](usb_audio_device.c)).
+- **User interface** — Menus, the spectrum scope, and the waterfall are rendered to the display ([`ui.cpp`](ui.cpp), [`waterfall.cpp`](waterfall.cpp)) via the [u8g2](external/u8g2) graphics library and the [`ili934x.cpp`](ili934x.cpp) colour driver. Tuning and control come from a rotary encoder / buttons ([`rotary_encoder.cpp`](rotary_encoder.cpp), [`button.cpp`](button.cpp)).
+- **Persistence** — Settings, memory channels, and autosave state are stored in flash ([`settings.cpp`](settings.cpp), [`memory.cpp`](memory.cpp), [`autosave_memory.cpp`](autosave_memory.cpp)). Factory defaults live in [`settings.h`](settings.h).
+- **Remote control** — CAT command handling over USB serial lives in [`cat.cpp`](cat.cpp).
 
-You can find a precompiled binary for PiPicoRx [here](https://github.com/dawsonjon/PicoRX/releases). If you want to build from the C++ source files, follow these instructions.
+The build also produces a small [`battery_check`](battery_check.cpp) utility.
 
-```
-  sudo apt install git
-  git clone https://github.com/dawsonjon/PicoRX.git
-  cd PicoRX
-  git submodule init
-  git submodule update
-```
+## Getting the code
 
-User Manual
------------
-
-You can find the user manual for the PiPicoRx [here](https://github.com/dawsonjon/PicoRX/raw/master/user_manual/Pi%20Pico%20Rx%20User%20Manual.pdf).
-
-
-Install Pi Pico SDK
--------------------
-
-Follow the [Getting started with the Raspberry Pi Pico](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf) quick start guide to install the C/C++ SDK.
-
-```
-  sudo apt install wget #if wget not installed
-  wget https://raw.githubusercontent.com/raspberrypi/pico-setup/master/pico_setup.sh
-  chmod +x pico_setup.sh
-  ./pico_setup.sh
+```sh
+git clone https://github.com/dawsonjon/PicoRX.git
+cd PicoRX
+git submodule update --init --recursive
 ```
 
-For windows users, this page provides and [installer](https://www.raspberrypi.com/news/raspberry-pi-pico-windows-installer/) that makes the process much simpler.
-  
+The submodules (notably [u8g2](external/u8g2)) are required to build.
 
-Build Projects
---------------
+A precompiled binary is also available on the [releases page](https://github.com/dawsonjon/PicoRX/releases) if you don't want to build from source.
 
-```
-  mkdir build
-  cd build
-  cmake -DPICO_BOARD=pico -DPICO_SDK_PATH=~/pico/pico-sdk ..
-  make
-```
+## Prerequisites
 
-```
-  mkdir build
-  cd build
-  cmake -DPICO_SDK_PATH=~/pico/pico-sdk -DPICO_BOARD=pico2 -DPICO_PLATFORM=rp2350-arm-s ..
-  make
-```
+You need the **Raspberry Pi Pico SDK** and an **Arm GNU toolchain**. The easiest route is the official setup:
 
-```
-  mkdir build
-  cd build
-  cmake -DPICO_SDK_PATH=~/pico/pico-sdk -DPICO_BOARD=pico2 -DPICO_PLATFORM=rp2350-riscv ..
-  make
+- **Linux:** follow [Getting started with the Raspberry Pi Pico](https://datasheets.raspberrypi.com/pico/getting-started-with-pico.pdf), or run the `pico_setup.sh` script.
+- **Windows:** use the [Pico Windows installer](https://www.raspberrypi.com/news/raspberry-pi-pico-windows-installer/).
+- **VS Code (any platform):** install the official **Raspberry Pi Pico** extension, which bundles a matching CMake, Ninja, and toolchain under `~/.pico-sdk`. This project is already configured for it (`.vscode/`).
+
+## Building
+
+The project uses CMake. The board is selected at configure time, so use a separate build directory per target.
+
+### Raspberry Pi Pico (RP2040) — default
+
+```sh
+cmake -B build -DPICO_BOARD=pico -DPICO_SDK_PATH=~/pico/pico-sdk
+cmake --build build
 ```
 
-Credits
--------
+This produces `build/picorx.elf` / `picorx.uf2` and the `battery_check` utility.
 
-Massive thanks to everybody who has contributed and given feedback on this project. Thanks to
-all your efforts, we’re closer than ever to making radio more accessible,
-innovative, and community-driven.
+### Raspberry Pi Pico 2 (RP2350, Arm)
 
-The project uses the Universal 8-bit Graphics Library (u8g2) library by
-olikraus@gmail.com, the pico_ssd1306 display library by David Schramm and the
-ILI934X display driver by Darren Horrocks.
+```sh
+cmake -B build -DPICO_BOARD=pico2 -DPICO_PLATFORM=rp2350-arm-s -DPICO_SDK_PATH=~/pico/pico-sdk
+cmake --build build
+```
 
-Special Thanks to:
+Produces `build/pico2rx.elf` / `.uf2`.
 
-Mariusz Ryndzionek for contributing IQ Imbalance Correction, De-emphasis
-filter, USB audio, U8G2 integration, Synronous AM Demodulation and many other
-enhancements.
+### Raspberry Pi Pico 2 (RP2350, RISC-V)
 
-Penfold42 for Gain Calibration, Frequency Scanning, Spectrum Zoom, Multiple home screen
-views, Animated Splash Screen, Support for multiple displays/configurations and
-many other enhancements.
+```sh
+cmake -B build -DPICO_BOARD=pico2 -DPICO_PLATFORM=rp2350-riscv -DPICO_SDK_PATH=~/pico/pico-sdk
+cmake --build build
+```
 
-Robert Nickels (W9RAN) and Jim Reagan (W0CHL) for their support and
-encouragements and for the enormous effort they have both put in testing,
-debugging, feedback and suggestions.
+Produces `build/pico2rx-riscv.elf` / `.uf2`.
+
+> **Note:** If `PICO_SDK_PATH` is not set, CMake will automatically fetch the SDK from GitHub on the first configure (this takes longer). Point `-DPICO_SDK_PATH` at your local SDK to avoid that.
+
+### Build options
+
+- `-DBUTTON_ENCODER=ON` — build for a button-based encoder instead of the default rotary encoder.
+
+### Building in VS Code
+
+With the Raspberry Pi Pico extension installed, open the folder and run **"Configure CMake"** from the command palette (once, or after editing `CMakeLists.txt`), then use the **"Compile Project"** build task. The bundled CMake/Ninja/toolchain under `~/.pico-sdk` are used automatically.
+
+## Flashing
+
+Hold the **BOOTSEL** button while plugging the Pico into USB, then copy the generated `.uf2` file (e.g. `build/picorx.uf2`) onto the `RPI-RP2` mass-storage drive that appears. The board reboots into the firmware automatically.
+
+Alternatively use `picotool load build/picorx.uf2`, or flash over SWD with the VS Code "Flash" task.
+
+## Credits
+
+The project uses the Universal 8-bit Graphics Library (u8g2) by olikraus@gmail.com, the pico_ssd1306 display library by David Schramm, and the ILI934X display driver by Darren Horrocks.
+
+Special thanks to **Mariusz Ryndzionek** (IQ imbalance correction, de-emphasis filter, USB audio, U8G2 integration, synchronous AM demodulation, and more), **Penfold42** (gain calibration, frequency scanning, spectrum zoom, multiple home-screen views, animated splash screen, multi-display support, and more), and **Robert Nickels (W9RAN)** and **Jim Reagan (W0CHL)** for extensive testing, debugging, feedback, and encouragement — along with everyone else who has contributed.
+
+See [`COPYING.txt`](COPYING.txt) for licensing.
+```
 
