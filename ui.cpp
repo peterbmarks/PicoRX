@@ -2709,8 +2709,10 @@ void ui::update_display_type(void)
   if(settings.global.oled_type)
   {
     u8g2_GetU8x8(&u8g2)->x_offset = 2;
+    disp.disp_col_offset = 2;
   } else {
     u8g2_GetU8x8(&u8g2)->x_offset = 0;
+    disp.disp_col_offset = 0;
   }
 }
 
