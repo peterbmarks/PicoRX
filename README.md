@@ -97,6 +97,137 @@ Hold the **BOOTSEL** button while plugging the Pico into USB, then copy the gene
 
 Alternatively use `picotool load build/picorx.uf2`, or flash over SWD with the VS Code "Flash" task.
 
+## Controls
+
+The receiver is operated with three buttons and a rotary encoder.
+
+| Control | Action |
+|---|---|
+| Encoder (turn) | Tune frequency at the current step size |
+| Menu + Encoder | Tune at 10× step |
+| Back + Encoder | Tune at 1/10× step |
+| Menu + Back + Encoder | Tune at 100× step |
+| Encoder button + Encoder | Adjust volume |
+| Encoder button + Menu + Encoder | Change demodulation mode |
+| Encoder button + Back + Encoder | Adjust squelch |
+| Menu button | Open main menu |
+| Encoder button | Open memory recall directly |
+| Back button | Cycle through display views |
+
+Pressing **Back** past the last display view enters Memory Scanner mode (see [Scanning](#scanning)).
+
+## Display views
+
+Eight views are available; cycle through them with the **Back** button.
+
+| View | Description |
+|---|---|
+| Original | Frequency, mode, signal strength, and narrow spectrum |
+| Big Spectrum | Full-screen spectrum scope |
+| Combined Spectrum | Status bar with large spectrum below |
+| Waterfall | Scrolling waterfall display |
+| Oscilloscope | Audio waveform |
+| Status | Numeric status (frequency, mode, AGC, S-meter) |
+| S-Meter | Analogue S-meter needle |
+| Fun | Alternative layout |
+
+## Menu reference
+
+Open the main menu with the **Menu** button. Navigate with the encoder; confirm with **Menu** or the encoder button; cancel with **Back**.
+
+### Main menu
+
+| Item | Options / Range | Notes |
+|---|---|---|
+| Frequency | digit-by-digit | Set receive frequency (Hz) |
+| Recall | channel 000–499 | Load a stored memory channel |
+| Store | channel 000–499 | Save current settings to a memory channel |
+| Volume | 0–9 | Audio output level |
+| Mode | AM / AM-Sync / LSB / USB / FM / CW | Demodulation mode |
+| AGC | Fast / Normal / Slow / Very Slow / Manual | AGC speed |
+| AGC Gain | 0–60 dB (6 dB steps) | Manual AGC gain (active in Manual AGC mode) |
+| Bandwidth | V Narrow / Narrow / Normal / Wide / Very Wide | IF filter width |
+| Squelch | S0–S9+30 dB | Squelch open threshold |
+| Squelch Timeout | 50 ms–5 s | How long the squelch stays open after the signal drops |
+| Noise Reduction | → submenu | Spectral noise reduction |
+| Impulse Blanker | Off / 3.0 / 2.8 / 2.6 / 2.4 / 2.2 / 2.0 | Impulse noise blanker threshold (σ) |
+| Auto Notch | Off / On | Automatic notch filter |
+| De-Emphasis | Off / 50 µs / 75 µs | FM de-emphasis time constant |
+| Bass | Off / +5 / +10 / +15 / +20 dB | Bass boost |
+| Treble | Off / +5 / +10 / +15 / +20 dB | Treble boost |
+| IQ Correction | Off / On | Software IQ imbalance correction |
+| Spectrum | → submenu | Spectrum display settings |
+| Aux Display | Waterfall / SSTV | Content shown in the auxiliary panel |
+| Band Start | digit-by-digit | Lower edge of the current tuning band (Hz) |
+| Band Stop | digit-by-digit | Upper edge of the current tuning band (Hz) |
+| Frequency Step | 10 Hz – 100 kHz | Encoder tuning step size |
+| CW Tone Frequency | 100–3000 Hz | CW sidetone pitch |
+| USB Stream | Audio / Raw IQ | Content sent over USB audio |
+| HW Config | → submenu | Hardware and display settings |
+
+### Noise Reduction submenu
+
+| Item | Options | Notes |
+|---|---|---|
+| Enable | Off / On | Master on/off for spectral NR |
+| Noise Estimation | Very Fast / Fast / Medium / Slow / Very Slow | Rate at which the noise floor is tracked |
+| Noise Threshold | Adaptive / Low / Normal / High / Very High | Aggressiveness of noise suppression |
+
+### Spectrum submenu
+
+| Item | Range | Notes |
+|---|---|---|
+| Spectrum Zoom | 1–4 | Zoom factor applied to the spectrum display |
+| Spectrum Smoothing | 1–4 | Temporal smoothing of the spectrum trace |
+
+### HW Config submenu
+
+| Item | Options / Range | Notes |
+|---|---|---|
+| Tuning Options | None / Tristate / Ground | Antenna switch control behaviour |
+| Display Timeout | Never / 5 s / 10 s / 15 s / 30 s / 1 min / 2 min / 4 min | Auto-dim timeout |
+| Regulator Mode | FM / PWM | Switching regulator mode (pin 23) |
+| Reverse Encoder | Off / On | Swap encoder rotation direction |
+| Encoder Resolution | Low / High | Match encoder detent count per revolution |
+| Swap IQ | Off / On | Swap I and Q channels (mirrors the spectrum) |
+| Gain Cal | 1–100 dB | Receiver gain calibration offset |
+| Freq Cal | −100 – +100 ppm | Crystal frequency calibration |
+| Flip OLED | Off / On | Rotate OLED 180° |
+| OLED Type | SSD1306 / SH1106 | OLED controller IC — set to SH1106 for the common 1.3″ modules |
+| Display Contrast | 0–15 | OLED brightness |
+| TFT Settings | Off / Rotation 1–8 | Enable and orient the optional ILI934x colour TFT |
+| TFT Colour | RGB / BGR | Colour byte order for the TFT panel |
+| TFT Invert | Off / On | Invert TFT colours |
+| TFT Driver | Normal / Alternate | TFT controller variant |
+| Bands | → submenu | User-defined band boundary frequencies |
+| IF Mode | Lower / Upper / Nearest | Which IF sideband the hardware uses |
+| IF Frequency | 0–12000 Hz | IF offset in Hz (in 100 Hz steps) |
+| External NCO | Off / On | Drive an external numerically-controlled oscillator |
+| USB Upload | confirm prompt | Reboot into USB mass-storage bootloader for firmware update |
+| Watchdog Test | Off / On | Intentionally hang the firmware to verify the watchdog resets it |
+
+### Bands submenu
+
+Defines the upper frequency boundary (in kHz) for each of 7 bands. The radio uses these boundaries to set the limits of the tuning range shown in the spectrum and to wrap the frequency when scanning.
+
+| Item | Range |
+|---|---|
+| Band 1 ≤ | 0–31875 kHz |
+| Band 2 ≤ | 0–31875 kHz |
+| Band 3 ≤ | 0–31875 kHz |
+| Band 4 ≤ | 0–31875 kHz |
+| Band 5 ≤ | 0–31875 kHz |
+| Band 6 ≤ | 0–31875 kHz |
+| Band 7 ≤ | 0–31875 kHz |
+
+## Scanning
+
+Cycling past the last display view with the **Back** button enters two automatic scanning modes in sequence.
+
+**Memory Scanner** — steps through the 500 stored memory channels, skipping blank slots and pausing for 3 seconds on any channel whose signal level exceeds the squelch threshold. The encoder adjusts scan speed (1–4 channels/s) and direction. **Menu** opens the main menu without leaving the scanner; **Back** exits to Frequency Scanner.
+
+**Frequency Scanner** — sweeps through the current band one step at a time, pausing on signals above the squelch threshold. Speed and direction are controlled with the encoder. **Menu** opens the main menu; **Back** returns to the normal idle display.
+
 ## Credits
 
 The project uses the Universal 8-bit Graphics Library (u8g2) by olikraus@gmail.com, the pico_ssd1306 display library by David Schramm, and the ILI934X display driver by Darren Horrocks.
