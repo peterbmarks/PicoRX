@@ -1,3 +1,4 @@
+.DS_Store
 build
 build_pico2
 build_pico2_riscv
@@ -5,5 +6,6 @@ test_dsp
 *~
 utils/img/
 __pycache__
-
 .vscode/
+PCB/pico_rx/.history/
+
